@@ -28,18 +28,20 @@ similarity <- function(distance, c){
 #' current_stimulus: features of the current stimulus (vector)
 #' exemplars: features of the exemplars of some category (matrix)
 #' c: scaling parameter (for similarity function)
-get_similarity_sum <- function(current_stimulus, exemplars, c){
+get_similarity_sum <- function(current_stimulus, exemplars, weight_vector, c){
     # init empty vector
     similarities <- c()
     
+    # ensure that exemplars is treated as a matrix
+    exemplars <- as.matrix(exemplars)
+
     # loop over rows in matrix
     for (i in 1:nrow(exemplars)){
-
         # extract current exemplar
         exemplar = exemplars[i,]
 
         # compute
-        distance = euclidean_distance(current_stimulus, exemplar)
+        distance = euclidean_distance(current_stimulus, exemplar, weight_vector)
         
         # calculate similarity between current stimulus and exemplar
         similarities[exemplar] <- similarity(distance, c)
@@ -53,7 +55,9 @@ get_similarity_sum <- function(current_stimulus, exemplars, c){
 
 #' General Categorization Model Agent
 #' stimuli: a trial by feature matrix
-GCMagent <- function(stimuli){
+#' weight_vector: a vector of weights for each feature
+#' c: scaling parameter for similarity function
+GCMagent <- function(stimuli, weight_vector, c){
     
     # init empty vector
     dangerous <- rep(NA, nrow(stimuli))
@@ -84,10 +88,11 @@ GCMagent <- function(stimuli){
         # check whether agent has seen both categories
         if (trial <= first_change){
             # make a random choice if the agent does not have an exemplar of both categories
-            choices[trial] <- rbern(1, 0.5)
+            choices[trial] <- rbinom(1, 1, 0.5)
         }
         
         else {
+            print(trial)
             # identify current exemplars (set the trial minus 1 to discount the one we are currently on)
             exemplars <- stimuli[1:trial-1,]
             dangerous_exemplars <- exemplars[dangerous[1:trial-1] == 1,]
@@ -97,15 +102,14 @@ GCMagent <- function(stimuli){
             current_stimulus <- stimuli[trial,]
             
             # calculate similarity sum (which first computes distances, then similarities)
-            dangerous_similarity_sum <- get_similarity_sum(current_stimulus, dangerous_exemplars, 1)
-            safe_similarity_sum <- get_similarity_sum(current_stimulus, safe_exemplars, 1)
+            dangerous_similarity_sum <- get_similarity_sum(current_stimulus, dangerous_exemplars, weight_vector, c)
+            safe_similarity_sum <- get_similarity_sum(current_stimulus, safe_exemplars, weight_vector, c)
 
             # compute the rate  for selecting dangerous
             dangerous_rate <- dangerous_similarity_sum / (dangerous_similarity_sum + safe_similarity_sum)
             
             # make a choice based on the rate, 1: dangerous, 0: safe
-            choices[trial] <- rbern(1, dangerous_rate)
-     
+            choices[trial] <- rbinom(1, 1, dangerous_rate)
         }
         
     }
@@ -135,7 +139,9 @@ simulate_session <- function(){
 stimuli <- simulate_session()
 
 # run the agent
-dangerous <- GCMagent(stimuli)
+weights <- c(1,1,1,1,1)
+c <- 0.1
+dangerous <- GCMagent(stimuli, weights, c)
 
 print(stimuli)
 print(dangerous)
