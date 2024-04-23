@@ -92,7 +92,6 @@ GCMagent <- function(stimuli, weight_vector, c){
         }
         
         else {
-            print(trial)
             # identify current exemplars (set the trial minus 1 to discount the one we are currently on)
             exemplars <- stimuli[1:trial-1,]
             dangerous_exemplars <- exemplars[dangerous[1:trial-1] == 1,]
@@ -139,9 +138,11 @@ simulate_session <- function(){
 stimuli <- simulate_session()
 
 # run the agent
-weights <- c(1,1,1,1,1)
+weights <- c(5,1,5,1,1)
 c <- 0.1
-dangerous <- GCMagent(stimuli, weights, c)
+choices <- GCMagent(stimuli, weights, c)
 
-print(stimuli)
-print(dangerous)
+# add dangerous to stimuli
+all <- cbind(stimuli, choices)
+
+print(all)
