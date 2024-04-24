@@ -83,6 +83,7 @@ GCMagent <- function(stimuli, weight_vector, c){
 
     # init choice vector
     choices <- c()
+    rates <- c()
 
     for (trial in 1:32) {
         # check whether agent has seen both categories
@@ -106,6 +107,8 @@ GCMagent <- function(stimuli, weight_vector, c){
 
             # compute the rate  for selecting dangerous
             dangerous_rate <- dangerous_similarity_sum / (dangerous_similarity_sum + safe_similarity_sum)
+
+            rates[trial] <- dangerous_rate
             
             # make a choice based on the rate, 1: dangerous, 0: safe
             choices[trial] <- rbinom(1, 1, dangerous_rate)
@@ -113,7 +116,7 @@ GCMagent <- function(stimuli, weight_vector, c){
         
     }
 
-    return(choices)
+    return(list(choices, dangerous, rates))
 }
 
 
@@ -134,15 +137,55 @@ simulate_session <- function(){
     return(combinations_matrix)    
 }
 
+simulate_agents <- function(stimuli_list, weight_vector, c, agent_type){
+    # get the number of agents from the length of the stimuli list
+    n_agents <- length(stimuli_list)
+
+    # init empty matrix for all data
+    all_data <- data.frame()
+
+    for (i in 1:n_agents){
+        stimuli <- stimuli_list[[i]]
+        result <- GCMagent(stimuli, weight_vector, c)
+        choices <- result[[1]]
+        dangerous <- result[[2]]
+        rates <- result[[3]]
+        accuracy <- ifelse(choices == dangerous, 1, 0)
+        agent_types <- rep(agent_type, nrow(stimuli))
+
+        data <- cbind(stimuli, choices, dangerous, accuracy, rates, agent_types)
+        
+        # add to all data
+        all_data <- rbind(all_data, data)
+    }
+    return(all_data)
+}
+
 # testing
-stimuli <- simulate_session()
+n_agent <- 50
+seeds <- 1:n_agent
+# simulate stimuli matrices and add to a list
+stimuli_list <- list()
+for (i in 1:n_agent){
+    # set seed for reproducibility, but change for each shuffling of stimuli since it otherwise shuffles the same way each time
+    set.seed(seeds[i])
+    stimuli_list[[i]] <- simulate_session()
+}
 
-# run the agent
-weights <- c(5,1,5,1,1)
-c <- 0.1
-choices <- GCMagent(stimuli, weights, c)
+# run a sim with agents that have favorable weights
+c <- 1
+weights_both_good <- c(20,1,20,1,1)
+weights_one_good <- c(20,1,1,1,1)
+weights_neutral <- c(1,1,1,1,1)
 
-# add dangerous to stimuli
-all <- cbind(stimuli, choices)
+both_good_data <- simulate_agents(stimuli_list, weights_both_good, c, "both_good")
+one_good_data <- simulate_agents(stimuli_list, weights_one_good, c, "one_good")
+neutral_data <- simulate_agents(stimuli_list, weights_neutral, c, "neutral")
 
-print(all)
+
+# bind all data together with a column for the agent type
+all_data <- rbind(both_good_data, one_good_data, neutral_data)
+
+file_path <- file.path("data", "simulated_data.csv")
+write.csv(all_data, file_path, row.names = FALSE)
+
