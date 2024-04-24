@@ -155,8 +155,9 @@ simulate_agents <- function(stimuli_list, weight_vector, c, agent_type){
 
         # compute trial 
         trial <- 1:nrow(stimuli)
+        agent_number <- i
 
-        data <- cbind(trial, stimuli, choices, dangerous, accuracy, rates, agent_types)
+        data <- cbind(agent_number, trial, stimuli, choices, dangerous, accuracy, rates, agent_types)
         
         # add to all data
         all_data <- rbind(all_data, data)
