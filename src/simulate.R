@@ -1,18 +1,18 @@
 # script for simulating the GCM model 
 
-#' Euclidean distance
+#' Manhattan distance
 #' vector1 & vector2: vector of values
-euclidean_distance <- function(vector1, vector2, weight_vector = c(1,1,1,1,1)){
+#' weight_vector: vector of weights for each feature
+manhattan_distance <- function(vector1, vector2, weight_vector = c(1,1,1,1,1)){
     
     # compute weighted featurewise differences
-    weighted_differences <- (vector1 - vector2)^2 * weight_vector
+    weighted_differences <- weight_vector * abs(vector1 - vector2) 
     
     # compute distance
-    distance = sqrt(sum(weighted_differences))
+    distance = sum(weighted_differences)
 
     return(distance)
 }
-
 
 #' Similarity
 #' distance: distance between two vectors
@@ -178,9 +178,9 @@ for (i in 1:n_agent){
 
 # run a sim with agents that have favorable weights
 c <- 1
-weights_both_good <- c(20,1,20,1,1)
-weights_one_good <- c(20,1,1,1,1)
-weights_neutral <- c(1,1,1,1,1)
+weights_both_good <- c(0.425,0.05,0.425,0.05,0.05)
+weights_one_good <- c(0.6,0.1,0.1,0.1,0.1)
+weights_neutral <- c(0.2,0.2,0.2,0.2,0.2)
 
 both_good_data <- simulate_agents(stimuli_list, weights_both_good, c, "both_good")
 one_good_data <- simulate_agents(stimuli_list, weights_one_good, c, "one_good")
