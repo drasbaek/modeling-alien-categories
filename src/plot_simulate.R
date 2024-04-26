@@ -11,7 +11,7 @@ grouped_data <- simulated_data %>%
 
 # plot the data
 plot <- ggplot(grouped_data, aes(x=trial, y=mean_accuracy, color=agent_types)) +
-  geom_smooth() +
+  geom_smooth(se=FALSE) +
   labs(title="Simulated Data", x="Trial", y="Mean Accuracy") +
 
   # facet wrap, put all plots side by side
