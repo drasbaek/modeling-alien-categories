@@ -41,7 +41,7 @@ get_similarity_sum <- function(current_stimulus, exemplars, weight_vector, c){
         exemplar = exemplars[i,]
 
         # compute
-        distance = euclidean_distance(current_stimulus, exemplar, weight_vector)
+        distance = manhattan_distance(current_stimulus, exemplar, weight_vector)
         
         # calculate similarity between current stimulus and exemplar
         similarities[exemplar] <- similarity(distance, c)
@@ -78,14 +78,14 @@ GCMagent <- function(stimuli, weight_vector, c){
     # calculate difference of vectors
     dangerous_diff <- dangerous - dangerous_lag
 
-    # extract first index that contains either a 1 or -1 (used for knowing when the agent has seen both)i
+    # extract first index that contains either a 1 or -1 (used for knowing when the agent has seen both)
     first_change <- which(dangerous_diff != 0)[1]
 
     # init choice vector
     choices <- c()
     rates <- c()
 
-    for (trial in 1:32) {
+    for (trial in 1:nrow(stimuli)) {
         # check whether agent has seen both categories
         if (trial <= first_change){
             # make a random choice if the agent does not have an exemplar of both categories
@@ -156,8 +156,9 @@ simulate_agents <- function(stimuli_list, weight_vector, c, agent_type){
         # compute trial 
         trial <- 1:nrow(stimuli)
         agent_number <- i
+        true_c <- rep(c, nrow(stimuli))
 
-        data <- cbind(agent_number, trial, stimuli, choices, dangerous, accuracy, rates, agent_types)
+        data <- cbind(true_c, agent_number, trial, stimuli, choices, dangerous, accuracy, rates, agent_types)
         
         # add to all data
         all_data <- rbind(all_data, data)
@@ -167,29 +168,57 @@ simulate_agents <- function(stimuli_list, weight_vector, c, agent_type){
 
 # testing
 n_agent <- 50
-seeds <- 1:n_agent
+n_sessions <- 3
+seeds <- 1:(n_agent*n_sessions)
+
 # simulate stimuli matrices and add to a list
 stimuli_list <- list()
 for (i in 1:n_agent){
     # set seed for reproducibility, but change for each shuffling of stimuli since it otherwise shuffles the same way each time
-    set.seed(seeds[i])
-    stimuli_list[[i]] <- simulate_session()
+    # do first session
+    seed1 <- seeds[n_sessions*i-2]
+    set.seed(seed1)
+    stimuli1 <- simulate_session()
+
+    # do second session
+    seed2 <- seeds[n_sessions*i-1]
+    set.seed(seed2)
+    stimuli2 <- simulate_session()
+
+    # do third session
+    seed3 <- seeds[n_sessions*i]
+    set.seed(seed3)
+    stimuli3 <- simulate_session()
+
+    # bind the sessions
+    stimuli <- rbind(stimuli1, stimuli2, stimuli3)
+
+    # add to list
+    print(paste("Saving stimuli with", seed1, seed2, seed3))
+    stimuli_list[[i]] <- stimuli
 }
 
-# run a sim with agents that have favorable weights
-c <- 1
-weights_both_good <- c(0.425,0.05,0.425,0.05,0.05)
-weights_one_good <- c(0.6,0.1,0.1,0.1,0.1)
+# set the weights we want to investigate
+weights_both_good <- c(0.5,0,0.5,0,0)
+weights_one_good <- c(0.5,0.125,0.125,0.125,0.125)
 weights_neutral <- c(0.2,0.2,0.2,0.2,0.2)
 
-both_good_data <- simulate_agents(stimuli_list, weights_both_good, c, "both_good")
-one_good_data <- simulate_agents(stimuli_list, weights_one_good, c, "one_good")
-neutral_data <- simulate_agents(stimuli_list, weights_neutral, c, "neutral")
+# set the scalings we want to investigate
+c <- c(0.1, 0.5, 1, 2, 5)
 
+# init empty df
+all_data <- data.frame()
 
-# bind all data together with a column for the agent type
-all_data <- rbind(both_good_data, one_good_data, neutral_data)
+# simulate for all combinations
+for (i in 1:length(c)){
+    # simulate data for each agent type
+    both_good_data <- simulate_agents(stimuli_list, weights_both_good, c[i], "both_good")
+    one_good_data <- simulate_agents(stimuli_list, weights_one_good, c[i], "one_good")
+    neutral_data <- simulate_agents(stimuli_list, weights_neutral, c[i], "neutral")
 
+    # add to all data
+    all_data <- rbind(all_data, both_good_data, one_good_data, neutral_data)
+}
 file_path <- file.path("data", "simulated_data.csv")
 write.csv(all_data, file_path, row.names = FALSE)
 
