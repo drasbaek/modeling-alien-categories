@@ -47,10 +47,10 @@ get_similarity_sum <- function(current_stimulus, exemplars, weight_vector, c){
         similarities[exemplar] <- similarity(distance, c)
 
     }
-    # calculate sum of the similarity scores
-    similarities_sum <- sum(similarities)
+    # calculate avg of the similarity scores
+    similarities_avg <- mean(similarities)
 
-    return(similarities_sum)
+    return(similarities_avg)
 }
 
 #' General Categorization Model Agent
