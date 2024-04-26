@@ -194,7 +194,7 @@ for (i in 1:n_agent){
     stimuli <- rbind(stimuli1, stimuli2, stimuli3)
 
     # add to list
-    print(paste("Saving stimuli with", seed1, seed2, seed3))
+    print(paste("Saving stimuli with seeds", seed1, seed2, seed3))
     stimuli_list[[i]] <- stimuli
 }
 
@@ -204,7 +204,7 @@ weights_one_good <- c(0.5,0.125,0.125,0.125,0.125)
 weights_neutral <- c(0.2,0.2,0.2,0.2,0.2)
 
 # set the scalings we want to investigate
-c <- c(0.1, 0.5, 1, 2, 5)
+c <- c(0.1, 0.3, 0.5, 1, 2, 5)
 
 # init empty df
 all_data <- data.frame()
