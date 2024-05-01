@@ -18,19 +18,19 @@ transformed data {
     array[ntrials-sum(dangerous)] int<lower=1, upper=ntrials> non_dangerous_idx; //  stimuli that are cat 2 (non_dangerous)
 
     // init counters for idx arrays 
-    count_idx_dangerous = 1; 
-    count_idx_non_dangerous = 1;
+    int count_idx_dangerous = 1; 
+    int count_idx_non_dangerous = 1;
 
     for (i in 1:ntrials){
         non_dangerous[i] = abs(dangerous[i] - 1);
 
         if (dangerous[i] == 1){
             dangerous_idx[count_idx_dangerous] = i;
-            idx_dangerous += 1;
+            count_idx_dangerous += 1;
 
         } else {
             non_dangerous_idx[count_idx_non_dangerous] = i;
-            idx_non_dangerous += 1;
+            count_idx_non_dangerous += 1;
         }
 
     }
@@ -44,7 +44,7 @@ parameters {
 
 transformed parameters {
     // define scaling parameter on true scale (inverse logit)
-    real<lower=0, upper=5> c = inv_logit(logit_c) * 5 // multiply by 5 to bound between 0 and 5
+    real<lower=0, upper=5> c = inv_logit(logit_c) * 5; // multiply by 5 to bound between 0 and 5
     
     // parameter for rate 
     array[ntrials] real<lower=0.00001, upper=0.99999> rate; // 
@@ -69,7 +69,7 @@ transformed parameters {
         }
         else {
             // compute similarity
-            array[2] real similarities
+            array[2] real similarities;
 
             // identify indexes in exemplars for each of the two categories
             array[sum(dangerous[:(i-1)])] int temp_count_idx_dangerous = dangerous_idx[:sum(dangerous[:(i-1)])];
@@ -80,7 +80,7 @@ transformed parameters {
             similarities[2] = sum(exemplar_similarities[temp_count_idx_non_dangerous]);
 
             // compute real rate at i 
-            real_rate[i] = similarties[1] / (similarities[1] + similarities[2]);
+            real_rate[i] = similarities[1] / (similarities[1] + similarities[2]);
 
             // compute rate at i (with a hacky fix)
             if (real_rate[i] >= 0.99999) {
@@ -97,15 +97,15 @@ transformed parameters {
 model{
     // define priors 
     target += dirichlet_lpdf(w | w_prior_values);
-    target += normal_lpdf(logic_c | c_prior_values[1], c_prior_values[2]);
+    target += normal_lpdf(logit_c | c_prior_values[1], c_prior_values[2]);
 
     // make choice 
-    target += bernoulli_lpmf(y | r);
+    target += bernoulli_lpmf(choices | rate);
 }
 
 generated quantities {
     // define priors again
-    simplex[nfeatures] w_prior = dirichlet_rng(w_prior_values)
+    simplex[nfeatures] w_prior = dirichlet_rng(w_prior_values);
     real logit_c_prior = normal_rng(c_prior_values[1], c_prior_values[2]);
     real<lower=0, upper=5> c_prior = inv_logit(logit_c_prior)*5;
 
@@ -128,7 +128,7 @@ generated quantities {
     
         // if no exemplars have been seen in either of the categories, make a random choice
         if (sum(dangerous[:(i-1)])==0 || sum(non_dangerous[:(i-1)])==0) {
-            rate[i] = 0.5;
+            rate_prior[i] = 0.5;
         }
 
         else {
@@ -145,11 +145,11 @@ generated quantities {
         similarities[2] = sum(exemplar_similarities[temp_count_idx_non_dangerous]);
 
         // calculate real rate at i 
-        real_rate_prior[i] = similarties[1] / (similarities[1] + similarities[2]);
+        real_rate_prior[i] = similarities[1] / (similarities[1] + similarities[2]);
 
         // compute rate at i (with a hacky fix)
         if (real_rate_prior[i] >= 0.99999) {
-            rate_oprior[i] = 0.99999;
+            rate_prior[i] = 0.99999;
         } else if (real_rate_prior[i] <= 0.00001) {
             rate_prior[i] = 0.00001;
         } else {
@@ -178,7 +178,7 @@ generated quantities {
     array[ntrials] real log_lik; 
 
     for (i in 1:ntrials){
-        log_lik[i] = bernoulli_lpmf(y[i], rate[i])
+        log_lik[i] = bernoulli_lpmf(choices[i] | rate[i]);
 
     }
 }
