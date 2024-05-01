@@ -50,3 +50,7 @@ rsconnect/
 
 # ignore mac content
 .DS_Store
+
+# ignore stan
+stan/*
+!stan/GCM.stan
