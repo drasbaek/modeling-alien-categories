@@ -50,7 +50,7 @@ for (type in selected_types){
         samples <- fit_model(df_subset, stan_filepath)
         
         # save samples
-        save(samples, file = here::here("data", "simulated_samples", paste0("samples_", agent_types, "_", true_c, ".rds")))
+        save(samples, file = here::here("data", "simulated_samples", paste0("samples_", type, "_c_", c, ".rds")))
     }
 }
 
