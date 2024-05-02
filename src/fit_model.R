@@ -9,7 +9,7 @@ fit_model <- function(df, stan_filepath){
                  "nfeatures" = 5, 
                  "dangerous" = df$dangerous,
                  "choices" = df$choices, 
-                 "stimuli" = df[,c("eyes", "legs", "spots", "arms", "color")]     
+                 "stimuli" = df[,c("eyes", "legs", "spots", "arms", "color")],    
                  "w_prior_values" = c(1, 1, 1, 1, 1), # consider changing
                  "c_prior_values" = c(0, 1) # consider changing          
                                   )

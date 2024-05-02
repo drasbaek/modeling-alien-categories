@@ -66,6 +66,7 @@ transformed parameters {
         // if no exemplars have been seen in either of the categories, make a random choice
         if (sum(dangerous[:(i-1)])==0 || sum(non_dangerous[:(i-1)])==0) {
             rate[i] = 0.5;
+            real_rate[i] = 0.5; // set real rate also soley to adhere to upper and lower bounds
         }
         else {
             // compute similarity
@@ -73,7 +74,7 @@ transformed parameters {
 
             // identify indexes in exemplars for each of the two categories
             array[sum(dangerous[:(i-1)])] int temp_count_idx_dangerous = dangerous_idx[:sum(dangerous[:(i-1)])];
-            array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(dangerous[:(i-1)])];
+            array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(non_dangerous[:(i-1)])];
 
             // compute similarity to the two categories
             similarities[1] = sum(exemplar_similarities[temp_count_idx_dangerous]);
@@ -138,7 +139,7 @@ generated quantities {
     
         // identify indexes in exemplars for each of the two categories
         array[sum(dangerous[:(i-1)])] int temp_count_idx_dangerous = dangerous_idx[:sum(dangerous[:(i-1)])];
-        array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(dangerous[:(i-1)])];
+        array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(non_dangerous[:(i-1)])];
 
          // compute similarity to the two categories
         similarities[1] = sum(exemplar_similarities[temp_count_idx_dangerous]);
