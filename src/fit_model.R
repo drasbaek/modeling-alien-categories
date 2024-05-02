@@ -3,13 +3,12 @@ pacman::p_load(tidyverse, here, cmdstanr, rstan, posterior, brms)
 
 fit_model <- function(df, stan_filepath){
     
-
     # prepare the data
     data <- list("ntrials" = length(df$trial),
                  "nfeatures" = 5, 
                  "dangerous" = df$dangerous,
                  "choices" = df$choices, 
-                 "stimuli" = df[,c("eyes", "legs", "spots", "arms", "color")],    
+                 "stimuli" = as.matrix(df[,c("eyes", "legs", "spots", "arms", "color")]),    
                  "w_prior_values" = c(1, 1, 1, 1, 1), # consider changing
                  "c_prior_values" = c(0, 1) # consider changing          
                                   )
@@ -37,9 +36,21 @@ stan_filepath <- here::here("stan", "GCM.stan")
 # read data
 df <- read_csv(here::here("data", "simulated_data.csv"))
 
-# subset the data to just a single simulation
-df <- df %>% filter(agent_number == 1 & agent_types == "both_good")
+# make six subsets of the data (two agent_type = both_good, one_good, neutral)
+selected_types <- c("both_good", "one_good", "neutral")
+selected_c <- c(0.3, 5)
 
-# fit model
-samples <- fit_model(df, here::here("stan", "GCM.stan"))
+# fit model for each subset
+for (type in selected_types){
+    for (c in selected_c){
+        # subset the data (always take the first agent)
+        df_subset <- df %>% filter(agent_number == 1 & agent_types == type & true_c == c)
+        
+        # fit model
+        samples <- fit_model(df_subset, stan_filepath)
+        
+        # save samples
+        save(samples, file = here::here("data", "simulated_samples", paste0("samples_", agent_types, "_", true_c, ".rds")))
+    }
+}
 
