@@ -77,8 +77,8 @@ transformed parameters {
             array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(non_dangerous[:(i-1)])];
 
             // compute similarity to the two categories
-            similarities[1] = sum(exemplar_similarities[temp_count_idx_dangerous]);
-            similarities[2] = sum(exemplar_similarities[temp_count_idx_non_dangerous]);
+            similarities[1] = mean(exemplar_similarities[temp_count_idx_dangerous]);
+            similarities[2] = mean(exemplar_similarities[temp_count_idx_non_dangerous]);
 
             // compute real rate at i 
             real_rate[i] = similarities[1] / (similarities[1] + similarities[2]);
@@ -142,8 +142,8 @@ generated quantities {
         array[sum(non_dangerous[:(i-1)])] int temp_count_idx_non_dangerous = non_dangerous_idx[:sum(non_dangerous[:(i-1)])];
 
          // compute similarity to the two categories
-        similarities[1] = sum(exemplar_similarities[temp_count_idx_dangerous]);
-        similarities[2] = sum(exemplar_similarities[temp_count_idx_non_dangerous]);
+        similarities[1] = mean(exemplar_similarities[temp_count_idx_dangerous]);
+        similarities[2] = mean(exemplar_similarities[temp_count_idx_non_dangerous]);
 
         // calculate real rate at i 
         real_rate_prior[i] = similarities[1] / (similarities[1] + similarities[2]);
