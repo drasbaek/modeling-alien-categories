@@ -1,5 +1,5 @@
 # fit model script
-pacman::p_load(tidyverse, here, cmdstanr, rstan, posterior, brms)
+pacman::p_load(tidyverse, here, cmdstanr, rstan, posterior, brms, stringr)
 
 fit_model <- function(df, stan_filepath){
     
@@ -33,6 +33,7 @@ fit_model <- function(df, stan_filepath){
 # stan file path
 stan_filepath <- here::here("stan", "GCM.stan")
 
+### SIMULATED DATA ### 
 # read data
 df <- read_csv(here::here("data", "simulated_data.csv"))
 
@@ -55,3 +56,40 @@ for (type in selected_types){
     }
 }
 
+
+### ALIEN DATA ###
+# read csv 
+real_df <- read_csv(here::here("data", "AlienData.txt"))
+
+# filter to only include session 1 (where eyes and spots indicate dangerous), condition 2 (where task was solved alone) and 96 trials (ignoring the stimulus that has pt at the end of their feature string)
+real_df <- real_df %>% filter(session == 1 & condition == 2 & trial <= 96)
+
+# rm .jpg 
+real_df$stimulus <- gsub(".jpg", "", real_df$stimulus)
+
+split_columns <- str_split_fixed(real_df$stimulus, "", 5)
+
+# make into df
+split_df <- as.data.frame(split_columns)
+
+colnames(split_df) <- c("eyes", "legs", "spots", "arms", "color")
+
+# bind to real_df
+real_df <- cbind(real_df, split_df)
+
+# derive choices
+real_df$choices <- ifelse(real_df$response %in% c(3, 4), 1, 0)
+
+# fit model
+n_subjects <- length(unique(real_df$subject))
+for (subject in 1:n_subjects){
+    # subset the data
+    df_subset <- real_df %>% filter(subject == subject)
+    
+    # fit model
+    samples <- fit_model(df_subset, stan_filepath)
+    
+    # save samples
+    file_path <- here::here("data", "real_samples", paste0("samples_subject_", subject, ".rds"))
+    samples$save_object(file_path)
+}
