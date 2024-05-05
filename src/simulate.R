@@ -204,7 +204,7 @@ weights_one_good <- c(0.5,0.125,0.125,0.125,0.125)
 weights_neutral <- c(0.2,0.2,0.2,0.2,0.2)
 
 # set the scalings we want to investigate
-c <- c(0.1, 0.3, 0.5, 1, 2, 5)
+c <- c(0.1, 0.3, 0.5, 1, 2, 4)
 
 # init empty df
 all_data <- data.frame()
