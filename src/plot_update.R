@@ -11,7 +11,7 @@ plot_prior_posterior_update <- function(samples, params){
 
 final_df <- data.frame()
 selected_types <- c("both_good", "one_good", "neutral")
-selected_c <- c(0.3, 5)
+selected_c <- c(0.5, 4)
 for (type in selected_types){
     for (c in selected_c){
         # define file path
@@ -70,7 +70,7 @@ weight_labs <- c("Eyes", "Legs", "Spots", "Arms", "Color")
 names(weight_labs) <- c("w[1]", "w[2]", "w[3]", "w[4]", "w[5]")
 
 scaling_labs <- c("Low Scaling", "High Scaling")
-names(scaling_labs) <- c("0.3", "5")
+names(scaling_labs) <- c("0.5", "4")
 
 # plot
 plot <- ggplot(weight_df, aes(w_value, fill=distribution)) +
