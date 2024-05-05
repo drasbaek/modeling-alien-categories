@@ -1,4 +1,4 @@
-pacman::p_load(tidyverse, here, cmdstanr, posterior, ggpubr, ggridges, ggh4x)
+pacman::p_load(tidyverse, here, cmdstanr, posterior, ggpubr, ggh4x)
 
 final_df <- data.frame()
 selected_types <- c("both_good", "one_good", "neutral")
@@ -115,3 +115,77 @@ plot <- ggplot(data = scaling_df, aes(x = c_value, fill=c_distribution)) +
 
 # save plot
 ggsave(here::here("plots", "scaling_prior_posterior_update.png"), plot, width = 10, height = 10, units = "in", dpi = 300)
+
+# PLOTTING POSTERIOR UPDATES FOR REAL DATA #
+final_df <- data.frame()
+subjects <- 1:27
+for (subject in subjects){
+    print(paste("Processing subject", subject))
+    # define file path
+    file_path <- here::here("data", "real_samples", paste0("samples_subject_", as.character(subject), ".rds"))
+    
+    # read samples
+    samples <- readRDS(file_path)
+
+    # bind to dataframe
+    df <- as_draws_df(samples$draws())
+
+    # add subject
+    df$subject <- rep(subject, nrow(df))
+
+    # add to final df
+    final_df <- rbind(final_df, df)
+}
+
+backup_final_df <- final_df
+
+# select sample columns
+final_df <- final_df[, c("subject", "w[1]", "w[2]", "w[3]", "w[4]", "w[5]", "c", "w_prior[1]", "w_prior[2]", "w_prior[3]", "w_prior[4]", "w_prior[5]", "c_prior")]
+
+# pivot the table
+final_df <- final_df %>% 
+    pivot_longer(cols=c("w[1]", "w[2]", "w[3]", "w[4]", "w[5]", "w_prior[1]", "w_prior[2]", "w_prior[3]", "w_prior[4]", "w_prior[5]", "c", "c_prior"), names_to = "parameter", values_to = "param_value") 
+
+# split parameter col
+final_df$distribution <- ifelse(grepl("prior", final_df$parameter), "prior", "posterior")
+final_df$parameter <- gsub("_prior", "", final_df$parameter)
+
+# ensure that distribution is a factor with prior as the first level
+final_df$distribution <- factor(final_df$distribution, levels = c("prior", "posterior"))
+
+# subset the final df by randomly sampling 5 subjects
+set.seed(123)
+selected_subjects <- sample(subjects, 5)
+subset_df <- final_df %>% filter(subject %in% selected_subjects)
+
+df_list <- list(final_df, subset_df)
+
+# plot
+param_labs <- c("Scaling", "Eyes", "Legs", "Spots", "Arms", "Color")
+names(param_labs) <- c("c", "w[1]", "w[2]", "w[3]", "w[4]", "w[5]")
+
+for (df in df_list){
+    plot <- ggplot(df, aes(param_value, fill=distribution)) +
+        geom_density(alpha=0.6) +
+        labs(x = "Parameter Value", fill = "Distribution") +
+        # legend values and labels
+        scale_fill_manual(values = c("prior" = "lightgrey", "posterior" = "#0f5bea"), labels=c("Prior", "Posterior")) +
+        # do all facets 
+        facet_grid(subject~parameter, switch="y", scales="free", labeller=labeller(parameter=param_labs)) + 
+        # scale y 
+        scale_y_discrete(expand = c(0, 0.10)) +
+        # add theme + custom theme elements
+        theme_bw() + 
+        theme(axis.title.y = element_blank(), axis.text.y = element_blank(), 
+              panel.spacing = unit(1, "lines"), strip.text = element_text(size = 13, face="bold"), strip.background = element_rect(fill="lightgrey"),
+              legend.text = element_text(size = 14), legend.title = element_text(size = 14), legend.position = "bottom",
+              axis.title.x = element_text(size = 14), axis.title = element_text(size = 14))
+    
+    # save plot
+    if (nrow(df) == nrow(subset_df)){
+        ggsave(here::here("plots", "real_data_posterior_update_subset.png"), plot, width = 12, height = 10, units = "in", dpi = 300)
+    } else {
+        ggsave(here::here("plots", "real_data_posterior_update_all.png"), plot, width = 10, height = 20, units = "in", dpi = 300)
+    }
+  
+}
