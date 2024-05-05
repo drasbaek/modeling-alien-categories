@@ -72,6 +72,7 @@ names(weight_labs) <- c("w[1]", "w[2]", "w[3]", "w[4]", "w[5]")
 scaling_labs <- c("Low Scaling", "High Scaling")
 names(scaling_labs) <- c("0.3", "5")
 
+# plot
 plot <- ggplot(weight_df, aes(w_value, fill=distribution)) +
     geom_density(alpha=0.6) +
     labs(x = "Weight Value", fill = "Distribution") +
@@ -93,4 +94,33 @@ plot <- ggplot(weight_df, aes(w_value, fill=distribution)) +
 # save plot 
 ggsave(here::here("plots", "weights_prior_posterior_update.png"), plot, width = 10, height = 10, units = "in", dpi = 300)
 
-subset_df
+# PLOTTING SCALING #
+scaling_df <- final_df[, c("agent_type", "c", "true_c", "c_prior")]
+
+scaling_df <- scaling_df %>% 
+    pivot_longer(cols = c("c", "c_prior"), names_to = "c_distribution", values_to = "c_value")
+    
+# make levels of c_distribution
+scaling_df$c_distribution <- factor(scaling_df$c_distribution, levels = c("c_prior", "c"))
+
+# change factor levels for agent type 
+scaling_df$agent_type <- factor(scaling_df$agent_type, levels = c("both_good", "one_good", "neutral"))
+
+plot <- ggplot(data = scaling_df, aes(x = c_value, fill=c_distribution)) +
+    geom_density(alpha = 0.6) +
+    labs(x = "Scaling Value", fill = "Distribution") +
+    geom_vline(aes(xintercept = as.numeric(true_c)), linetype = "dashed", color = "black") +
+    facet_grid(agent_type~true_c, switch="y", labeller = labeller(agent_type=agent_type_labs, true_c=scaling_labs)) +
+    
+    # legend values and labels
+    scale_fill_manual(values = c("c_prior" = "lightgrey", "c" = "#0f5bea"), labels=c("Prior", "Posterior")) +
+
+    # add theme + custom theme elements
+    theme_bw() +
+    theme(legend.position = "bottom", axis.title.y = element_blank(), axis.text.y = element_blank(), axis.ticks.y=element_blank(),
+            panel.spacing = unit(1, "lines"), strip.text = element_text(size = 13, face="bold"), strip.background = element_rect(fill="lightgrey"),
+            legend.text = element_text(size = 14), legend.title = element_text(size = 14), axis.title.x = element_text(size = 14), axis.title = element_text(size = 14),
+            panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank())
+
+# save plot
+ggsave(here::here("plots", "scaling_prior_posterior_update.png"), plot, width = 10, height = 10, units = "in", dpi = 300)
