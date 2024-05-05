@@ -7,9 +7,7 @@ df <- read_csv(here::here("data", "AlienData.txt"))
 df <- df %>% filter(session == 1 & condition == 2 & trial <= 96)
 
 # add a column to indicate whether responses were correct on dangerous condition
-df$dangerous_accuracy <- ifelse(df$dangerous == 1 & df$response %in% c(2, 4) | df$dangerous == 0 & df$response %in% c(1, 3), 1, 0)
-
-df$subject
+df$dangerous_accuracy <- ifelse(df$dangerous == 1 & df$response %in% c(3, 4) | df$dangerous == 0 & df$response %in% c(1, 2), 1, 0)
 
 cumsum_df <- df %>%
   group_by(subject) %>% 
@@ -29,7 +27,7 @@ plot <- ggplot() +
   geom_smooth(data=cumsum_df, aes(x=trial, y=cumulative_dangerous_accuracy), se=FALSE, color="#0f5bea") +
   geom_ribbon(data=grouped_df, aes(x=trial, y=mean_dangerous_accuracy, ymin = mean_dangerous_accuracy - sd_dangerous_accuracy, ymax = mean_dangerous_accuracy + sd_dangerous_accuracy), alpha=0.1) +
   labs(x="Trial", y="Cumulative Accuracy") +
-  coord_cartesian(xlim = c(1, 96), ylim = c(0.20, 0.80)) +
+  coord_cartesian(xlim = c(1, 96), ylim = c(0.20, 1)) +
   theme_bw()
 
 # save
