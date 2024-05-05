@@ -1,14 +1,5 @@
 pacman::p_load(tidyverse, here, cmdstanr, posterior, ggpubr, ggridges, ggh4x)
 
-plot_prior_posterior_update <- function(samples, params){
-    
-    draws_df <- as_draws_df(samples$draws())
-    # plot 
-    plot <- ggplot(draws_df, aes(x = , y = )) + 
-        geom_density_ridges(scale = 0.6)
-
-}
-
 final_df <- data.frame()
 selected_types <- c("both_good", "one_good", "neutral")
 selected_c <- c(0.5, 4)
