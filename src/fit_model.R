@@ -74,6 +74,9 @@ split_df <- as.data.frame(split_columns)
 
 colnames(split_df) <- c("eyes", "legs", "spots", "arms", "color")
 
+# make all columns numeric
+split_df <- split_df %>% mutate_all(as.numeric)
+
 # bind to real_df
 real_df <- cbind(real_df, split_df)
 
@@ -82,14 +85,14 @@ real_df$choices <- ifelse(real_df$response %in% c(3, 4), 1, 0)
 
 # fit model
 n_subjects <- length(unique(real_df$subject))
-for (subject in 1:n_subjects){
+for (s in 1:n_subjects){
     # subset the data
-    df_subset <- real_df %>% filter(subject == subject)
+    df_subset <- real_df %>% filter(subject == s)
     
     # fit model
     samples <- fit_model(df_subset, stan_filepath)
     
     # save samples
-    file_path <- here::here("data", "real_samples", paste0("samples_subject_", subject, ".rds"))
+    file_path <- here::here("data", "real_samples", paste0("samples_subject_", s, ".rds"))
     samples$save_object(file_path)
 }
