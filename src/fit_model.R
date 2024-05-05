@@ -38,7 +38,7 @@ df <- read_csv(here::here("data", "simulated_data.csv"))
 
 # make six subsets of the data (two agent_type = both_good, one_good, neutral)
 selected_types <- c("both_good", "one_good", "neutral")
-selected_c <- c(0.3, 5)
+selected_c <- c(0.5, 4)
 
 # fit model for each subset
 for (type in selected_types){
