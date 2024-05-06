@@ -32,3 +32,23 @@ plot <- ggplot() +
 
 # save
 ggsave(here::here("plots", "alien_data_cumulative.png"), plot, width=10, height=6, units="in", dpi=300)
+
+# subset by five subjects
+subset_df <- cumsum_df %>% 
+  filter(subject %in% c(3, 10, 14, 15, 19))
+
+subset_df$subject <- as.factor(subset_df$subject)
+
+# do the plot but without grouped_df 
+plot <- ggplot(data=subset_df, aes(x=trial, y=cumulative_dangerous_accuracy, color = subject)) +
+  geom_hline(yintercept=0.5, linetype="dashed", color = "black") +
+  geom_line(size=1) +
+  scale_color_brewer(palette="Paired") +
+  labs(x="Trial", y="Cumulative Accuracy") +
+  coord_cartesian(xlim = c(1, 96), ylim = c(0.20, 1)) +
+  theme_bw()+ 
+  # custom legend title 
+  theme(legend.position = "bottom", legend.text = element_text(size = 14), legend.title = element_blank(), axis.title.x = element_text(size = 14), axis.title = element_text(size = 14), 
+        panel.spacing = unit(1, "lines"), strip.text = element_text(size = 13, face="bold"), strip.background = element_rect(fill="lightgrey"))
+
+ggsave(here::here("plots", "performance_subset_participants.png"), plot, width=10, height=6, units="in", dpi=300)
